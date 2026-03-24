@@ -1,0 +1,48 @@
+services:
+
+  # PostgreSQL + pgvector
+  # 負責: 靜態字典 (TrackedEntity/EntityAlias)、SourceDocument、DiscoveredConcept、VectorEmbedding
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: stockbot-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: stockbot
+      POSTGRES_USER: stockbot
+      POSTGRES_PASSWORD: stockbot_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stockbot -d stockbot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # InfluxDB v2
+  # 負責: 時序熱度 (stock_mentions)、股票量價行情 (stock_ohlcv)
+  influxdb:
+    image: influxdb:2.7
+    container_name: stockbot-influxdb
+    restart: unless-stopped
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: stockbot
+      DOCKER_INFLUXDB_INIT_PASSWORD: stockbot_pass
+      DOCKER_INFLUXDB_INIT_ORG: stockbot-org
+      DOCKER_INFLUXDB_INIT_BUCKET: stockbot
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: stockbot-super-secret-token
+    ports:
+      - "8086:8086"
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+    healthcheck:
+      test: ["CMD", "influx", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+  influxdb_data:
