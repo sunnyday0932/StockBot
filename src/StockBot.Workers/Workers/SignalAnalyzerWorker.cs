@@ -1,13 +1,12 @@
 using Microsoft.Extensions.Options;
 using StockBot.Infrastructure.Alerting;
 using StockBot.Infrastructure.Options;
-using StockBot.Infrastructure.Telegram;
 
 namespace StockBot.Workers.Workers;
 
 public sealed class SignalAnalyzerWorker(
     ISignalAnalyzer analyzer,
-    ITelegramNotifier notifier,
+    IAlertNotifier notifier,
     IOptions<SignalAnalyzerOptions> options,
     ILogger<SignalAnalyzerWorker> logger) : BackgroundService
 {

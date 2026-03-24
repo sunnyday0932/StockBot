@@ -76,7 +76,7 @@ builder.Services.Configure<TelegramOptions>(
     builder.Configuration.GetSection("Telegram"));
 builder.Services.AddSingleton<IInfluxDbReader, InfluxDbReader>();
 builder.Services.AddSingleton<ISignalAnalyzer, SignalAnalyzer>();
-builder.Services.AddSingleton<ITelegramNotifier, TelegramNotifier>();
+builder.Services.AddSingleton<IAlertNotifier, TelegramNotifier>();
 
 // Workers
 builder.Services.AddHostedService<WhitelistInitializerWorker>();

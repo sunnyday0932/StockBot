@@ -17,7 +17,10 @@
       "Bash(taskkill //IM \"StockBot.Workers.exe\" //F)",
       "WebFetch(domain:www.ptt.cc)",
       "WebFetch(domain:github.com)",
-      "WebFetch(domain:jasonblog.github.io)"
+      "WebFetch(domain:jasonblog.github.io)",
+      "Bash(find /c/Users/sunny/RiderProjects/StockBot/src/StockBot.Domain -name *.cs)",
+      "Bash(docker ps:*)",
+      "Bash(taskkill //F //IM StockBot.BackOffice.exe)"
     ]
   }
 }

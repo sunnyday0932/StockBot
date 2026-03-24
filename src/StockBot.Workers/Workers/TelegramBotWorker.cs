@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using StockBot.Domain.Entities;
+using StockBot.Infrastructure.Alerting;
 using StockBot.Infrastructure.Options;
 using StockBot.Infrastructure.Persistence;
-using StockBot.Infrastructure.Telegram;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
@@ -17,7 +17,7 @@ namespace StockBot.Workers.Workers;
 /// </summary>
 public sealed class TelegramBotWorker(
     IServiceScopeFactory scopeFactory,
-    ITelegramNotifier notifier,
+    IAlertNotifier notifier,
     IOptions<TelegramOptions> options,
     ILogger<TelegramBotWorker> logger) : BackgroundService
 {

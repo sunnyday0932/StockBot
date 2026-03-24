@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using StockBot.Domain.Entities;
 using StockBot.Domain.Enums;
+using StockBot.Infrastructure.Alerting;
 using StockBot.Infrastructure.Options;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
@@ -10,7 +11,7 @@ namespace StockBot.Infrastructure.Telegram;
 
 public sealed class TelegramNotifier(
     IOptions<TelegramOptions> options,
-    ILogger<TelegramNotifier> logger) : ITelegramNotifier
+    ILogger<TelegramNotifier> logger) : IAlertNotifier
 {
     private readonly TelegramBotClient _bot    = new(options.Value.BotToken);
     private readonly TelegramOptions   _opts   = options.Value;
