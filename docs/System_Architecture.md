@@ -19,6 +19,13 @@ graph TD
         CrawlerWorker[排程爬蟲 Worker<br/>新聞 / MOPS]
         WSCrawler[即時 WebSocket 監聽<br/>PTT]
         MarketFetcher[行情定時拉取 Worker<br/>OHLCV / Tick]
+        WhitelistInit[白名單初始化 Worker<br/>TWSE+TPEX → TrackedEntity]
+    end
+
+    %% BackOffice
+    subgraph BackOffice [2.5 管理介面 (BackOffice)]
+        BOWhitelist[白名單管理<br/>新增 / 編輯 EntityAlias]
+        BOArticles[PTT 文章瀏覽<br/>搜尋 / 篩選 / 全文]
     end
 
     %% Processing Layer
@@ -46,10 +53,12 @@ graph TD
     News --> CrawlerWorker
     MOPS --> CrawlerWorker
     MarketAPI --> MarketFetcher
+    MarketAPI --> WhitelistInit
 
     CrawlerWorker --> Normalizer
     WSCrawler --> Normalizer
     MarketFetcher --> InfluxDB
+    WhitelistInit --> LocalDB
 
     Normalizer --> TopDownMatcher
 
@@ -66,6 +75,10 @@ graph TD
     InfluxDB -- 定期 Query 熱度+行情 --> SignalAnalyzer
     SignalAnalyzer -- 觸發條件 共振/背離 --> TG_Bot
     LocalDB -.->|候選新概念推送| TG_Bot
+
+    %% BackOffice 雙向讀寫
+    BOWhitelist <-->|CRUD| LocalDB
+    BOArticles -->|讀取| LocalDB
 ```
 
 ## 各層職責說明
@@ -75,6 +88,13 @@ graph TD
 *   對於如 PTT 這類更新極快的論壇，優先考慮使用 WebSocket 即時監聽。
 *   對於新聞網站，則採用定時排程 (如每分鐘) 爬取 RSS 或 HTML。
 *   **行情資料 (MarketFetcher)**：定時呼叫 TWSE/TPEX 官方 OpenAPI 或 Fugle API，拉取 OHLCV 日線或盤中 tick 資料，直接寫入 InfluxDB。V1 使用免費的 TWSE/TPEX API (延遲 5 分鐘)，進階版升級至 Fugle WebSocket 實現即時行情。
+*   **白名單初始化 (WhitelistInit)**：啟動時從 TWSE/TPEX 拉取完整股票清單，idempotent upsert 至 `TrackedEntity` + `EntityAlias`（6304 筆 × 2 = 12608 個關鍵字）。
+
+### 2.5 管理介面 (BackOffice)
+Blazor Server 管理介面（port 5001），提供人工干預的入口，讓系統不再是黑盒子：
+*   **白名單管理**：搜尋 / 新增 / 編輯 `TrackedEntity` 及其 `EntityAlias`，支援手動加入縮寫、同義詞等 Aho-Corasick 比對用關鍵字。
+*   **PTT 文章瀏覽**：查看已爬取的 `SourceDocument`，支援篩選、排序與全文檢視，確認爬蟲資料品質。
+*   直接讀寫 `StockBotDbContext`（Stage 3 加入 Application layer 後改為 interface）。
 
 ### 2. 處理與關聯層 (Processing)
 整個大腦的核心。所有的 `SourceDocument` 都會流經這裡。

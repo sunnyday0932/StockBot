@@ -65,6 +65,40 @@
 
 ---
 
+## 階段 2.5：BackOffice 管理介面 🔲 規劃中
+
+> 插入於資料收集與比對引擎之間，讓資料可被觀察與管理，避免黑盒子操作。
+
+### 技術選型
+
+| 項目 | 選擇 |
+|------|------|
+| 框架 | ASP.NET Core + Blazor Server |
+| 連線埠 | 5001（獨立於 Workers） |
+| 資料存取 | 直接注入 `StockBotDbContext`（無 Application layer，Stage 3 前可接受） |
+| 樣式 | Bootstrap（預設 Blazor 樣板） |
+
+### 任務清單
+
+- [ ] **專案建立**
+  - [ ] 新增 `StockBot.BackOffice` Blazor Server 專案
+  - [ ] 加入 Solution，引用 `StockBot.Infrastructure` / `StockBot.Domain`
+  - [ ] 設定 `appsettings.json`（共用 PostgreSQL 連線字串）
+  - [ ] 加入 Solution 至 `StockBot.slnx`
+
+- [ ] **白名單管理（Whitelist）**
+  - [ ] `WhitelistIndex` 頁：搜尋 / 分頁瀏覽 `TrackedEntity`（by 代號 / 名稱）
+  - [ ] `WhitelistIndex` 頁：新增股票（代號 + 名稱，自動建兩個 Alias）
+  - [ ] `WhitelistDetail` 頁：查看 / 新增 / 刪除個別股票的 `EntityAlias`
+  - [ ] 支援新增非股票類型（`Concept` / `Person`）
+
+- [ ] **PTT 文章瀏覽（Articles）**
+  - [ ] `ArticleIndex` 頁：分頁列表，欄位：標題、作者、時間、推/噓/→ 數
+  - [ ] `ArticleIndex` 頁：篩選（日期範圍、SourceType）與排序（最新 / 推文數）
+  - [ ] `ArticleDetail` 頁：文章全文、完整 Metadata
+
+---
+
 ## 階段三：核心比對引擎（Processing）🔲 未開始
 
 ### 任務清單
