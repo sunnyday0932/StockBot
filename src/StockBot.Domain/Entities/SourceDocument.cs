@@ -16,4 +16,7 @@ public class SourceDocument
     public int? PttUpvoteCount { get; set; }
     public int? PttDownvoteCount { get; set; }
     public int? PttArrowCount { get; set; }
+
+    // Processing 層設置：null = 尚未處理，有值 = 已由 TopDownMatcher 處理完畢
+    public DateTime? ProcessedAt { get; set; }
 }

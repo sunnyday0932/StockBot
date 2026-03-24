@@ -4,6 +4,7 @@ using StockBot.Infrastructure.InfluxDb;
 using StockBot.Infrastructure.MarketData;
 using StockBot.Infrastructure.Options;
 using StockBot.Infrastructure.Persistence;
+using StockBot.Infrastructure.Processing;
 using StockBot.Workers.Workers;
 
 var builder = Host.CreateApplicationBuilder(args);
@@ -58,11 +59,15 @@ builder.Services.AddHttpClient<CnyesNewsCrawlerWorker>(client =>
     client.Timeout = TimeSpan.FromSeconds(15);
 });
 
+// Processing
+builder.Services.AddSingleton<ITopDownMatcher, TopDownMatcher>();
+
 // Workers
 builder.Services.AddHostedService<WhitelistInitializerWorker>();
 builder.Services.AddHostedService<MarketDataWorker>();
 builder.Services.AddHostedService<PttCrawlerWorker>();
 builder.Services.AddHostedService<CnyesNewsCrawlerWorker>();
+builder.Services.AddHostedService<ProcessingWorker>();
 
 var host = builder.Build();
 host.Run();

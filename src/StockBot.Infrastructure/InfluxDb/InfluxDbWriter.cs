@@ -3,6 +3,7 @@ using InfluxDB.Client.Api.Domain;
 using InfluxDB.Client.Writes;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using StockBot.Domain.Entities;
 using StockBot.Infrastructure.MarketData;
 using StockBot.Infrastructure.Options;
 
@@ -50,6 +51,34 @@ public sealed class InfluxDbWriter : IInfluxDbWriter, IDisposable
             .Field("Volume",        r.Volume)
             .Field("TurnoverValue", (double)r.TurnoverValue)
             .Timestamp(timestamp, WritePrecision.S);
+    }
+
+    public async Task WriteMentionsAsync(
+        IEnumerable<(SourceDocument Document, AnalysisResult Result)> items,
+        CancellationToken ct = default)
+    {
+        var points = new List<PointData>();
+
+        foreach (var (doc, result) in items)
+        {
+            foreach (var match in result.MatchedEntities)
+            {
+                var point = PointData.Measurement("stock_mentions")
+                    .Tag("StockCode",  match.StockCode ?? $"entity_{match.EntityId}")
+                    .Tag("SourceType", doc.SourceType.ToString())
+                    .Field("MentionCount", (long)match.MentionCount)
+                    .Timestamp(doc.PublishedAt, WritePrecision.S);
+
+                points.Add(point);
+            }
+        }
+
+        if (points.Count == 0) return;
+
+        var writeApi = _client.GetWriteApiAsync();
+        await writeApi.WritePointsAsync(points, _options.Bucket, _options.Org, ct);
+
+        _logger.LogInformation("Wrote {Count} mention points to InfluxDB.", points.Count);
     }
 
     public void Dispose() => _client.Dispose();

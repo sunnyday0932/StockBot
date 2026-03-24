@@ -104,17 +104,24 @@
 
 ---
 
-## 階段三：核心比對引擎（Processing）🔲 未開始
+## 階段三：核心比對引擎（Processing）🔲 進行中
 
 ### 任務清單
 
-- [ ] **Aho-Corasick TopDownMatcher**
-  - [ ] 從 PostgreSQL 讀取 `EntityAlias` 白名單建立 Trie
-  - [ ] 對 `SourceDocument.Content` 做多關鍵字比對
-  - [ ] 輸出 `AnalysisResult`
+- [x] **Aho-Corasick TopDownMatcher**
+  - [x] `AhoCorasickTrie`：純演算法，O(|text| + |matches|) 搜尋複雜度
+  - [x] 從 PostgreSQL 讀取所有 `EntityAlias`（12608 個關鍵字）建立 Trie
+  - [x] 對 `SourceDocument.Title + Content` 做多關鍵字比對
+  - [x] 輸出 `AnalysisResult`（含每個 EntityMatch 的 MentionCount）
+  - [x] `SourceDocument.ProcessedAt`（nullable）追蹤處理狀態 + EF migration
+  - [x] 單元測試：12 個（命中 / 未命中 / 邊界 / 壓力場景）
 
-- [ ] **ResultBuilder**
-  - [ ] 將 `AnalysisResult.MatchedEntities` 寫入 InfluxDB `stock_mentions`
+- [x] **ResultBuilder（內嵌於 ProcessingWorker）**
+  - [x] `ProcessingWorker`：每 30 秒批次（50 篇）掃描 `ProcessedAt IS NULL` 文件
+  - [x] 將 `MatchedEntities` 的 MentionCount 寫入 InfluxDB `stock_mentions`
+  - [x] 寫完 InfluxDB 後 commit `ProcessedAt` 至 PostgreSQL
+
+- [ ] **VectorEmbedding（ResultBuilder 進階）**
   - [ ] 將 `VectorEmbedding` 寫入 PostgreSQL `DocumentEmbedding`（pgvector）
 
 - [ ] **BottomUpProbe**
