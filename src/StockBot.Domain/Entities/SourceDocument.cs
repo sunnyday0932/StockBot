@@ -19,4 +19,10 @@ public class SourceDocument
 
     // Processing 層設置：null = 尚未處理，有值 = 已由 TopDownMatcher 處理完畢
     public DateTime? ProcessedAt { get; set; }
+
+    // TopDownMatcher 命中的 Entity 數量（0 = 無任何股票/概念提及）
+    public int EntityMatchCount { get; set; }
+
+    // BottomUpProbe 層設置：null = 尚未探針，有值 = LLM 已萃取概念
+    public DateTime? ProbedAt { get; set; }
 }

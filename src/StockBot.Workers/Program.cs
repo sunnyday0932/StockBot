@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Pgvector.EntityFrameworkCore;
+using StockBot.Infrastructure.Ai;
 using StockBot.Infrastructure.InfluxDb;
 using StockBot.Infrastructure.MarketData;
 using StockBot.Infrastructure.Options;
@@ -62,12 +63,17 @@ builder.Services.AddHttpClient<CnyesNewsCrawlerWorker>(client =>
 // Processing
 builder.Services.AddSingleton<ITopDownMatcher, TopDownMatcher>();
 
+// AI services（Stub 實作；替換為真實 LLM 時只需改此處）
+builder.Services.AddSingleton<IEmbeddingService, StubEmbeddingService>();
+builder.Services.AddSingleton<ILlmConceptExtractor, StubLlmConceptExtractor>();
+
 // Workers
 builder.Services.AddHostedService<WhitelistInitializerWorker>();
 builder.Services.AddHostedService<MarketDataWorker>();
 builder.Services.AddHostedService<PttCrawlerWorker>();
 builder.Services.AddHostedService<CnyesNewsCrawlerWorker>();
 builder.Services.AddHostedService<ProcessingWorker>();
+builder.Services.AddHostedService<BottomUpProbeWorker>();
 
 var host = builder.Build();
 host.Run();

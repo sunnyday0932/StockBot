@@ -104,7 +104,7 @@
 
 ---
 
-## 階段三：核心比對引擎（Processing）🔲 進行中
+## 階段三：核心比對引擎（Processing）✅ 已完成
 
 ### 任務清單
 
@@ -121,13 +121,21 @@
   - [x] 將 `MatchedEntities` 的 MentionCount 寫入 InfluxDB `stock_mentions`
   - [x] 寫完 InfluxDB 後 commit `ProcessedAt` 至 PostgreSQL
 
-- [ ] **VectorEmbedding（ResultBuilder 進階）**
-  - [ ] 將 `VectorEmbedding` 寫入 PostgreSQL `DocumentEmbedding`（pgvector）
+- [x] **VectorEmbedding（ResultBuilder 進階）**
+  - [x] `IEmbeddingService` 介面 + `StubEmbeddingService`（零向量，TODO: 替換為 OpenAI/Azure）
+  - [x] 命中文章才計算 Embedding（節省 API 費用）
+  - [x] 寫入 PostgreSQL `DocumentEmbedding`（pgvector）
 
-- [ ] **BottomUpProbe**
-  - [ ] 篩選已命中白名單且熱度高的文章
-  - [ ] 呼叫 LLM API（Semantic Kernel）萃取新關鍵字
-  - [ ] 寫入 `DiscoveredConcept`（待審核）
+- [x] **BottomUpProbe**
+  - [x] `ILlmConceptExtractor` 介面 + `StubLlmConceptExtractor`（空回傳，TODO: 替換為 Semantic Kernel）
+  - [x] `BottomUpProbeWorker`：每 2 分鐘掃一次熱門文章（PTT 推文 ≥ 10 或非 PTT）
+  - [x] 寫入 `DiscoveredConcept`（upsert：重複 keyword 更新 AppearanceCount）
+  - [x] `SourceDocument.EntityMatchCount` + `ProbedAt` + EF migration
+
+  > **TODO（填洞）**：
+  > - `StubEmbeddingService` → 替換為 `OpenAI text-embedding-3-small`
+  > - `StubLlmConceptExtractor` → 替換為 `Semantic Kernel + GPT-4o-mini`
+  > - 只需在 `Program.cs` 改 `AddSingleton<IEmbeddingService, ...>` 與 `AddSingleton<ILlmConceptExtractor, ...>`
 
 ---
 
