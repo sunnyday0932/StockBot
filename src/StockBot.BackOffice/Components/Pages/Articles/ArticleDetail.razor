@@ -1,0 +1,58 @@
+@page "/articles/{DocId}"
+@rendermode InteractiveServer
+@inject StockBotDbContext Db
+
+<PageTitle>文章 - @(_doc?.Title ?? "載入中")</PageTitle>
+
+@if (_doc == null)
+{
+    <p>載入中...</p>
+}
+else
+{
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/articles">PTT 文章</a></li>
+            <li class="breadcrumb-item active text-truncate" style="max-width:400px;">@_doc.Title</li>
+        </ol>
+    </nav>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title mb-1">@_doc.Title</h5>
+            <div class="text-muted small mb-2">
+                作者：@(_doc.Author ?? "不明") ｜
+                時間：@_doc.PublishedAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss") ｜
+                @if (_doc.Url != null)
+                {
+                    <a href="@_doc.Url" target="_blank" rel="noopener">原文連結</a>
+                }
+            </div>
+            <div class="d-flex gap-3 small">
+                <span class="text-success">推 @(_doc.PttUpvoteCount ?? 0)</span>
+                <span class="text-danger">噓 @(_doc.PttDownvoteCount ?? 0)</span>
+                <span class="text-secondary">→ @(_doc.PttArrowCount ?? 0)</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <pre class="mb-0" style="white-space: pre-wrap; word-break: break-word; font-family: inherit; font-size: 0.9rem;">@_doc.Content</pre>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public string DocId { get; set; } = "";
+
+    private SourceDocument? _doc;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var decodedId = Uri.UnescapeDataString(DocId);
+        _doc = await Db.SourceDocuments
+            .AsNoTracking()
+            .FirstOrDefaultAsync(d => d.DocumentId == decodedId);
+    }
+}

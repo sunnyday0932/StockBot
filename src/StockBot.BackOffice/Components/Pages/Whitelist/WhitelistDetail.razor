@@ -1,0 +1,113 @@
+@page "/whitelist/{Id:int}"
+@rendermode InteractiveServer
+@inject StockBotDbContext Db
+@inject NavigationManager Nav
+
+<PageTitle>白名單 - @(_entity?.PrimaryName ?? "載入中")</PageTitle>
+
+@if (_entity == null)
+{
+    <p>載入中...</p>
+}
+else
+{
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/whitelist">白名單管理</a></li>
+            <li class="breadcrumb-item active">@_entity.PrimaryName</li>
+        </ol>
+    </nav>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">@_entity.PrimaryName</h5>
+            <p class="card-text text-muted mb-0">
+                代號：@(_entity.StockCode ?? "-") ｜ 類型：@_entity.Type
+            </p>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h6 class="mb-0">關鍵字（EntityAlias）</h6>
+        <button class="btn btn-sm btn-primary" @onclick="ShowAddForm">+ 新增關鍵字</button>
+    </div>
+
+    @if (_showAddForm)
+    {
+        <div class="input-group mb-3" style="max-width: 400px;">
+            <input class="form-control" placeholder="輸入關鍵字..." @bind="_newKeyword" />
+            <button class="btn btn-primary" @onclick="AddAliasAsync">新增</button>
+            <button class="btn btn-outline-secondary" @onclick="HideAddForm">取消</button>
+        </div>
+        @if (_addError != null)
+        {
+            <div class="alert alert-danger py-1 small mb-2">@_addError</div>
+        }
+    }
+
+    <table class="table table-sm table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>關鍵字</th>
+                <th style="width: 80px;"></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var alias in _entity.Aliases.OrderBy(a => a.Keyword))
+            {
+                <tr>
+                    <td>@alias.Keyword</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-danger"
+                                @onclick="() => DeleteAliasAsync(alias.Id)">刪除</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private TrackedEntity? _entity;
+    private bool _showAddForm;
+    private string _newKeyword = "";
+    private string? _addError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _entity = await Db.TrackedEntities
+            .Include(e => e.Aliases)
+            .FirstOrDefaultAsync(e => e.Id == Id);
+    }
+
+    private void ShowAddForm() { _addError = null; _newKeyword = ""; _showAddForm = true; }
+    private void HideAddForm() => _showAddForm = false;
+
+    private async Task AddAliasAsync()
+    {
+        _addError = null;
+        var kw = _newKeyword.Trim();
+        if (string.IsNullOrEmpty(kw)) { _addError = "關鍵字不可為空"; return; }
+        if (_entity!.Aliases.Any(a => a.Keyword == kw)) { _addError = "關鍵字已存在"; return; }
+
+        var alias = new EntityAlias { Keyword = kw, EntityId = _entity.Id };
+        Db.Set<EntityAlias>().Add(alias);
+        // EF Core relationship fixup 會在 Add() 時自動把 alias 加進 _entity.Aliases，
+        // 不需手動再 Add，否則會出現重複。
+        await Db.SaveChangesAsync();
+
+        HideAddForm();
+    }
+
+    private async Task DeleteAliasAsync(int aliasId)
+    {
+        var alias = _entity!.Aliases.FirstOrDefault(a => a.Id == aliasId);
+        if (alias == null) return;
+
+        Db.Set<EntityAlias>().Remove(alias);
+        await Db.SaveChangesAsync();
+        _entity.Aliases.Remove(alias);
+    }
+}

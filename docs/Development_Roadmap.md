@@ -65,7 +65,7 @@
 
 ---
 
-## 階段 2.5：BackOffice 管理介面 🔲 規劃中
+## 階段 2.5：BackOffice 管理介面 ✅ 已完成
 
 > 插入於資料收集與比對引擎之間，讓資料可被觀察與管理，避免黑盒子操作。
 
@@ -73,29 +73,31 @@
 
 | 項目 | 選擇 |
 |------|------|
-| 框架 | ASP.NET Core + Blazor Server |
+| 框架 | ASP.NET Core + Blazor Web App (`--interactivity Server`) |
 | 連線埠 | 5001（獨立於 Workers） |
 | 資料存取 | 直接注入 `StockBotDbContext`（無 Application layer，Stage 3 前可接受） |
-| 樣式 | Bootstrap（預設 Blazor 樣板） |
+| 樣式 | Bootstrap 5.3（CDN） |
+| 已知陷阱 | Blazor Server 的 DbContext 生命週期為 SignalR circuit，EF Core relationship fixup 會自動更新導覽屬性，勿手動再 `.Add()` / `.Remove()` |
 
 ### 任務清單
 
-- [ ] **專案建立**
-  - [ ] 新增 `StockBot.BackOffice` Blazor Server 專案
-  - [ ] 加入 Solution，引用 `StockBot.Infrastructure` / `StockBot.Domain`
-  - [ ] 設定 `appsettings.json`（共用 PostgreSQL 連線字串）
-  - [ ] 加入 Solution 至 `StockBot.slnx`
+- [x] **專案建立**
+  - [x] 新增 `StockBot.BackOffice` Blazor Server 專案（`dotnet new blazor --interactivity Server`）
+  - [x] 加入 Solution，引用 `StockBot.Infrastructure` / `StockBot.Domain`
+  - [x] 設定 `appsettings.json`（共用 PostgreSQL 連線字串）
+  - [x] 加入 Solution 至 `StockBot.slnx`
+  - [x] 設定 port 5001，Bootstrap CDN
 
-- [ ] **白名單管理（Whitelist）**
-  - [ ] `WhitelistIndex` 頁：搜尋 / 分頁瀏覽 `TrackedEntity`（by 代號 / 名稱）
-  - [ ] `WhitelistIndex` 頁：新增股票（代號 + 名稱，自動建兩個 Alias）
-  - [ ] `WhitelistDetail` 頁：查看 / 新增 / 刪除個別股票的 `EntityAlias`
-  - [ ] 支援新增非股票類型（`Concept` / `Person`）
+- [x] **白名單管理（Whitelist）**
+  - [x] `WhitelistIndex` 頁：搜尋 / 分頁瀏覽 `TrackedEntity`（by 代號 / 名稱）
+  - [x] `WhitelistIndex` 頁：新增股票（代號 + 名稱，自動建兩個 Alias）/ Concept / Person
+  - [x] `WhitelistDetail` 頁：查看 / 新增 / 刪除個別股票的 `EntityAlias`
+  - [x] 支援新增非股票類型（`Concept` / `Person`）
 
-- [ ] **PTT 文章瀏覽（Articles）**
-  - [ ] `ArticleIndex` 頁：分頁列表，欄位：標題、作者、時間、推/噓/→ 數
-  - [ ] `ArticleIndex` 頁：篩選（日期範圍、SourceType）與排序（最新 / 推文數）
-  - [ ] `ArticleDetail` 頁：文章全文、完整 Metadata
+- [x] **PTT 文章瀏覽（Articles）**
+  - [x] `ArticleIndex` 頁：分頁列表，欄位：標題、作者、時間、推/噓/→ 數
+  - [x] `ArticleIndex` 頁：篩選（日期範圍、標題關鍵字）與排序（最新 / 推文數）
+  - [x] `ArticleDetail` 頁：文章全文、完整 Metadata
 
 ---
 
@@ -157,6 +159,8 @@
 | Npgsql.EF | 10.0.1 |
 | Pgvector.EF | 0.3.0 |
 | InfluxDB.Client | 5.0.0 |
+| HtmlAgilityPack | 1.12.4 |
+| Bootstrap | 5.3（CDN） |
 | PostgreSQL Image | pgvector/pgvector:pg16 |
 | InfluxDB Image | influxdb:2.7 |
 | xUnit | 2.9.3 |

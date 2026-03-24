@@ -1,0 +1,195 @@
+@page "/whitelist"
+@rendermode InteractiveServer
+@inject StockBotDbContext Db
+@inject NavigationManager Nav
+
+<PageTitle>白名單管理</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">白名單管理</h4>
+    <button class="btn btn-sm btn-primary" @onclick="ShowAddModal">+ 新增</button>
+</div>
+
+<div class="input-group mb-3" style="max-width: 400px;">
+    <input class="form-control" placeholder="搜尋代號或名稱..." @bind="_search" @bind:event="oninput" @onkeydown="OnSearchKeyDown" />
+    <button class="btn btn-outline-secondary" @onclick="LoadAsync">搜尋</button>
+</div>
+
+@if (_entities == null)
+{
+    <p>載入中...</p>
+}
+else
+{
+    <table class="table table-sm table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>代號</th>
+                <th>名稱</th>
+                <th>類型</th>
+                <th>關鍵字數</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var e in _entities)
+            {
+                <tr>
+                    <td>@(e.StockCode ?? "-")</td>
+                    <td>@e.PrimaryName</td>
+                    <td>@e.Type</td>
+                    <td>@e.AliasCount</td>
+                    <td>
+                        <a class="btn btn-sm btn-outline-secondary" href="/whitelist/@e.Id.ToString()">管理</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="d-flex align-items-center gap-3">
+        <span class="text-muted small">共 @_totalCount 筆</span>
+        <nav>
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item @(_page == 1 ? "disabled" : "")">
+                    <button class="page-link" @onclick="PrevPage">«</button>
+                </li>
+                <li class="page-item disabled">
+                    <span class="page-link">@_page / @_totalPages</span>
+                </li>
+                <li class="page-item @(_page == _totalPages ? "disabled" : "")">
+                    <button class="page-link" @onclick="NextPage">»</button>
+                </li>
+            </ul>
+        </nav>
+    </div>
+}
+
+@if (_showAddModal)
+{
+    <div class="modal d-block" tabindex="-1" style="background: rgba(0,0,0,.4)">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">新增白名單項目</h5>
+                    <button class="btn-close" @onclick="HideAddModal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">類型</label>
+                        <select class="form-select" @bind="_addType">
+                            <option value="@EntityType.Stock">Stock（股票）</option>
+                            <option value="@EntityType.Concept">Concept（概念）</option>
+                            <option value="@EntityType.Person">Person（人名）</option>
+                        </select>
+                    </div>
+                    @if (_addType == EntityType.Stock)
+                    {
+                        <div class="mb-3">
+                            <label class="form-label">股票代號</label>
+                            <input class="form-control" @bind="_addCode" placeholder="例：2330" />
+                        </div>
+                    }
+                    <div class="mb-3">
+                        <label class="form-label">名稱（PrimaryName）</label>
+                        <input class="form-control" @bind="_addName" placeholder="例：台積電" />
+                    </div>
+                    @if (_addError != null)
+                    {
+                        <div class="alert alert-danger py-1 small">@_addError</div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="HideAddModal">取消</button>
+                    <button class="btn btn-primary" @onclick="AddEntityAsync">新增</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private const int PageSize = 20;
+
+    private List<EntityRow>? _entities;
+    private int _totalCount;
+    private int _page = 1;
+    private int _totalPages = 1;
+    private string _search = "";
+
+    private bool _showAddModal;
+    private EntityType _addType = EntityType.Stock;
+    private string _addCode = "";
+    private string _addName = "";
+    private string? _addError;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        var query = Db.TrackedEntities
+            .AsNoTracking()
+            .Where(e => string.IsNullOrEmpty(_search) ||
+                        e.StockCode!.Contains(_search) ||
+                        e.PrimaryName.Contains(_search));
+
+        _totalCount = await query.CountAsync();
+        _totalPages = Math.Max(1, (_totalCount + PageSize - 1) / PageSize);
+        _page = Math.Min(_page, _totalPages);
+
+        _entities = await query
+            .OrderBy(e => e.StockCode)
+            .ThenBy(e => e.PrimaryName)
+            .Skip((_page - 1) * PageSize)
+            .Take(PageSize)
+            .Select(e => new EntityRow(e.Id, e.StockCode, e.PrimaryName, e.Type, e.Aliases.Count))
+            .ToListAsync();
+    }
+
+    private async Task PrevPage() { _page--; await LoadAsync(); }
+    private async Task NextPage() { _page++; await LoadAsync(); }
+
+    private async Task OnSearchKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") { _page = 1; await LoadAsync(); }
+    }
+
+    private void ShowAddModal() { _addError = null; _addCode = ""; _addName = ""; _showAddModal = true; }
+    private void HideAddModal() => _showAddModal = false;
+
+    private async Task AddEntityAsync()
+    {
+        _addError = null;
+        if (string.IsNullOrWhiteSpace(_addName)) { _addError = "名稱不可為空"; return; }
+        if (_addType == EntityType.Stock && string.IsNullOrWhiteSpace(_addCode)) { _addError = "股票類型必須填代號"; return; }
+
+        var entity = new TrackedEntity
+        {
+            Type = _addType,
+            PrimaryName = _addName.Trim(),
+            StockCode = _addType == EntityType.Stock ? _addCode.Trim() : null,
+        };
+
+        if (_addType == EntityType.Stock)
+        {
+            entity.Aliases =
+            [
+                new EntityAlias { Keyword = _addCode.Trim() },
+                new EntityAlias { Keyword = _addName.Trim() },
+            ];
+        }
+        else
+        {
+            entity.Aliases = [new EntityAlias { Keyword = _addName.Trim() }];
+        }
+
+        Db.TrackedEntities.Add(entity);
+        await Db.SaveChangesAsync();
+
+        HideAddModal();
+        _page = 1;
+        await LoadAsync();
+    }
+
+    private sealed record EntityRow(int Id, string? StockCode, string PrimaryName, EntityType Type, int AliasCount);
+}

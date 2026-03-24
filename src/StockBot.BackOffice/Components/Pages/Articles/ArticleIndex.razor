@@ -1,0 +1,141 @@
+@page "/articles"
+@rendermode InteractiveServer
+@inject StockBotDbContext Db
+
+<PageTitle>PTT 文章</PageTitle>
+
+<h4 class="mb-3">PTT 文章</h4>
+
+<div class="row g-2 mb-3 align-items-end">
+    <div class="col-auto">
+        <label class="form-label small mb-1">開始日期</label>
+        <input type="date" class="form-control form-control-sm" @bind="_dateFrom" />
+    </div>
+    <div class="col-auto">
+        <label class="form-label small mb-1">結束日期</label>
+        <input type="date" class="form-control form-control-sm" @bind="_dateTo" />
+    </div>
+    <div class="col-auto">
+        <label class="form-label small mb-1">排序</label>
+        <select class="form-select form-select-sm" @bind="_sortBy">
+            <option value="newest">最新</option>
+            <option value="upvotes">推文數</option>
+        </select>
+    </div>
+    <div class="col-auto">
+        <label class="form-label small mb-1">關鍵字</label>
+        <input class="form-control form-control-sm" placeholder="標題搜尋..." @bind="_titleSearch" />
+    </div>
+    <div class="col-auto">
+        <button class="btn btn-sm btn-primary" @onclick="Search">搜尋</button>
+    </div>
+</div>
+
+@if (_articles == null)
+{
+    <p>載入中...</p>
+}
+else
+{
+    <table class="table table-sm table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>標題</th>
+                <th>作者</th>
+                <th>發文時間</th>
+                <th style="width:60px;" class="text-center">推</th>
+                <th style="width:60px;" class="text-center">噓</th>
+                <th style="width:60px;" class="text-center">→</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var a in _articles)
+            {
+                <tr>
+                    <td class="text-truncate" style="max-width:380px;">@a.Title</td>
+                    <td>@(a.Author ?? "-")</td>
+                    <td>@a.PublishedAt.ToLocalTime().ToString("MM/dd HH:mm")</td>
+                    <td class="text-center text-success">@(a.PttUpvoteCount?.ToString() ?? "-")</td>
+                    <td class="text-center text-danger">@(a.PttDownvoteCount?.ToString() ?? "-")</td>
+                    <td class="text-center text-secondary">@(a.PttArrowCount?.ToString() ?? "-")</td>
+                    <td>
+                        <a class="btn btn-sm btn-outline-secondary" href="/articles/@Uri.EscapeDataString(a.DocumentId)">查看</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="d-flex align-items-center gap-3">
+        <span class="text-muted small">共 @_totalCount 筆</span>
+        <nav>
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item @(_page == 1 ? "disabled" : "")">
+                    <button class="page-link" @onclick="PrevPage">«</button>
+                </li>
+                <li class="page-item disabled">
+                    <span class="page-link">@_page / @_totalPages</span>
+                </li>
+                <li class="page-item @(_page == _totalPages ? "disabled" : "")">
+                    <button class="page-link" @onclick="NextPage">»</button>
+                </li>
+            </ul>
+        </nav>
+    </div>
+}
+
+@code {
+    private const int PageSize = 25;
+
+    private List<SourceDocument>? _articles;
+    private int _totalCount;
+    private int _page = 1;
+    private int _totalPages = 1;
+
+    private DateOnly? _dateFrom;
+    private DateOnly? _dateTo;
+    private string _sortBy = "newest";
+    private string _titleSearch = "";
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task Search() { _page = 1; await LoadAsync(); }
+    private async Task PrevPage() { _page--; await LoadAsync(); }
+    private async Task NextPage() { _page++; await LoadAsync(); }
+
+    private async Task LoadAsync()
+    {
+        var query = Db.SourceDocuments
+            .AsNoTracking()
+            .Where(d => d.SourceType == SourceType.PttStock);
+
+        if (_dateFrom.HasValue)
+        {
+            var from = _dateFrom.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+            query = query.Where(d => d.PublishedAt >= from);
+        }
+        if (_dateTo.HasValue)
+        {
+            var to = _dateTo.Value.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc);
+            query = query.Where(d => d.PublishedAt <= to);
+        }
+        if (!string.IsNullOrWhiteSpace(_titleSearch))
+        {
+            query = query.Where(d => d.Title.Contains(_titleSearch));
+        }
+
+        query = _sortBy == "upvotes"
+            ? query.OrderByDescending(d => d.PttUpvoteCount)
+            : query.OrderByDescending(d => d.PublishedAt);
+
+        _totalCount = await query.CountAsync();
+        _totalPages = Math.Max(1, (_totalCount + PageSize - 1) / PageSize);
+        _page = Math.Min(_page, _totalPages);
+
+        _articles = await query
+            .Skip((_page - 1) * PageSize)
+            .Take(PageSize)
+            .ToListAsync();
+    }
+}

@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/StockBot.BackOffice/StockBot.BackOffice.csproj" />
     <Project Path="src/StockBot.Domain/StockBot.Domain.csproj" />
     <Project Path="src/StockBot.Infrastructure/StockBot.Infrastructure.csproj" />
     <Project Path="src/StockBot.Workers/StockBot.Workers.csproj" />
