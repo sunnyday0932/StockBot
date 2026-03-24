@@ -50,10 +50,19 @@ builder.Services.AddHttpClient<PttCrawlerWorker>(client =>
     client.Timeout = TimeSpan.FromSeconds(15);
 });
 
+// Cnyes News Crawler
+builder.Services.Configure<CnyesCrawlerOptions>(
+    builder.Configuration.GetSection("CnyesCrawler"));
+builder.Services.AddHttpClient<CnyesNewsCrawlerWorker>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(15);
+});
+
 // Workers
 builder.Services.AddHostedService<WhitelistInitializerWorker>();
 builder.Services.AddHostedService<MarketDataWorker>();
 builder.Services.AddHostedService<PttCrawlerWorker>();
+builder.Services.AddHostedService<CnyesNewsCrawlerWorker>();
 
 var host = builder.Build();
 host.Run();

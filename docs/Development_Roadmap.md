@@ -26,7 +26,7 @@
 
 ---
 
-## 階段二：資料收集（Ingestion）🔲 進行中
+## 階段二：資料收集（Ingestion）✅ 已完成
 
 ### 任務清單
 
@@ -59,9 +59,12 @@
   - [x] 寫入 PostgreSQL `SourceDocuments`（驗證通過，6 篇含推噓數）
   - [x] 單元測試：12 個（ParseIndex / ParseArticle / TryParseArticleDate Theory）
 
-- [ ] **財經新聞爬蟲 Worker**
-  - [ ] 定時爬取鉅亨網 RSS（每分鐘）
-  - [ ] 正規化為 `SourceDocument`
+- [x] **財經新聞爬蟲 Worker**
+  - [x] 定時爬取鉅亨網 RSS（每分鐘）
+  - [x] `CnyesRssParser`：解析 RSS XML，手動解析 RFC 822 timezone offset（+0800 格式）
+  - [x] 正規化為 `SourceDocument`（SourceType.NewsCnyes）
+  - [x] 記憶體 HashSet 去重 + 啟動時從 DB 載入近 7 天已知 ID
+  - [x] 單元測試：12 個（Parse / TryParsePubDate Theory 測試）
 
 ---
 
