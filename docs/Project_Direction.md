@@ -17,9 +17,25 @@
    - 監控「冷門股代號 + 熱門新科技關鍵字」的異常配對，提早發現「老店新開」的題材初升段。
 
 ## 三、 系統資料來源設計
+
+### 3.1 輿情資料來源
 針對第一版 MVP（最小可行性產品），資料來源過濾與選擇如下：
 *   **首要監控目標（高訊號價值、易於即時串接）**：PTT Stock 股板、公開資訊觀測站 (MOPS)、主流財經新聞（鉅亨網、經濟日報等）。
 *   **次要/進階監控目標（散戶情緒發酵）**：Threads、社群論壇。
+
+### 3.2 股票量價行情資料來源
+「量價背離/共振」是系統的核心訊號，必須有獨立的行情資料管道。評估如下：
+
+| 來源 | 費用 | 即時性 | WebSocket | 涵蓋 |
+|------|------|--------|-----------|------|
+| **TWSE 官方 OpenAPI** (`openapi.twse.com.tw`) | 免費 | 延遲 5 分鐘 | 否 | 上市 (TWSE) |
+| **TPEX 官方 OpenAPI** (`tpex.org.tw/openapi`) | 免費 | 延遲 | 否 | 上櫃 (TPEX) |
+| **FinMind** (`finmindtrade.com`) | 免費 (600次/時) | 盤後 EOD | 否 | 上市 + 上櫃 |
+| **Fugle 富果 Market Data API** | 付費訂閱 | 即時 | 是 | 上市 |
+
+**V1 MVP 建議策略（由簡入難）**：
+*   **盤後驗證**：優先串接 **TWSE + TPEX 官方 OpenAPI** 或 **FinMind**，免費無需申請，用日線 OHLCV 資料驗證聲量/量價背離邏輯。
+*   **盤中即時**（進階）：升級至 **Fugle WebSocket API**，取得盤中 tick-by-tick 資料，實現真正的即時共振偵測。
 
 ## 四、 V1 系統資料處理架構：混合模式 (Hybrid Architecture)
 為了平衡「精準度」與「發掘新題材的能力」，採用以下策略：
@@ -33,13 +49,13 @@
 ## 五、 系統技術藍圖規劃建議 (C# / .NET 生態系)
 1.  **資料收集層 (Data Ingestion)**
     *   **技術方向**：.NET Worker Service / Hangfire 排程。
-    *   **實作目標**：建立穩定的 PTT/新聞 爬蟲或 WebSocket 串接。
+    *   **實作目標**：建立穩定的 PTT/新聞 爬蟲或 WebSocket 串接，以及 TWSE/TPEX/Fugle 行情 API 定時拉取。
 2.  **處理與關聯層 (Processing & NLP)**
     *   **技術方向**：高效字串比對演算法 (如 Aho-Corasick) 搭配 Semantic Kernel 呼叫 LLM API。
     *   **實作目標**：建立動態關聯字典 (Knowledge Graph)、股票實體識別 (NER)、文本情緒判定。
 3.  **儲存與量化層 (Storage & Time-Series)**
-    *   **技術方向**：直接採用 **InfluxDB**。
-    *   **實作目標**：儲存時序熱度資料與處理向量 (Vector) 等相關運算，作為量價背離與熱度分析的基礎。
+    *   **技術方向**：**InfluxDB**（時序熱度與行情）+ **PostgreSQL + pgvector**（靜態字典與向量 Embedding）。
+    *   **實作目標**：InfluxDB 儲存聲量/情緒/行情等時序指標；pgvector 負責文本語意搜尋，避免用時序資料庫存向量。
 4.  **警報輸出層 (Alerting)**
     *   **技術方向**：**Telegram Bot API**。
-    *   **實作目標**：透過 Telegram 機器人/頻道，將即時的「共振」、「出貨背離」等量價訊號推播至終端。
+    *   **實作目標**：透過 Telegram 機器人/頻道，將即時的「共振」、「出貨背離」等量價訊號推播至終端；同時支援指令互動，讓使用者審核 DiscoveredConcept 候選名詞。
