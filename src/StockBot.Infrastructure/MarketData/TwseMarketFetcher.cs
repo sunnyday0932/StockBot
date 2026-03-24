@@ -1,7 +1,7 @@
-using System.Globalization;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using StockBot.Infrastructure.Options;
 
 namespace StockBot.Infrastructure.MarketData;
 
@@ -44,76 +44,31 @@ public sealed class TwseMarketFetcher(
 
         foreach (var dto in dtos)
         {
-            // 跳過數值欄位為 "--" 的停牌或異常股票
-            if (!TryParseDecimal(dto.OpeningPrice, out var open)  ||
-                !TryParseDecimal(dto.HighestPrice, out var high)  ||
-                !TryParseDecimal(dto.LowestPrice,  out var low)   ||
-                !TryParseDecimal(dto.ClosingPrice, out var close) ||
-                !TryParseLong(dto.TradeVolume,    out var volume) ||
-                !TryParseLong(dto.TradeValue,     out var turnover))
-            {
+            if (!MarketDataParser.TryParseDecimal(dto.OpeningPrice, out var open)   ||
+                !MarketDataParser.TryParseDecimal(dto.HighestPrice, out var high)   ||
+                !MarketDataParser.TryParseDecimal(dto.LowestPrice,  out var low)    ||
+                !MarketDataParser.TryParseDecimal(dto.ClosingPrice, out var close)  ||
+                !MarketDataParser.TryParseLong(dto.TradeVolume,     out var volume) ||
+                !MarketDataParser.TryParseLong(dto.TradeValue,      out var turnover))
                 continue;
-            }
 
-            if (!TryParseRocDate(dto.Date, out var tradingDate))
+            if (!MarketDataParser.TryParseRocDate(dto.Date, out var tradingDate))
                 continue;
 
             result.Add(new StockOhlcvRecord(
-                StockCode:    dto.Code,
-                StockName:    dto.Name,
-                TradingDate:  tradingDate,
-                Open:         open,
-                High:         high,
-                Low:          low,
-                Close:        close,
-                Volume:       volume,
+                StockCode:     dto.Code,
+                StockName:     dto.Name,
+                TradingDate:   tradingDate,
+                Open:          open,
+                High:          high,
+                Low:           low,
+                Close:         close,
+                Volume:        volume,
                 TurnoverValue: turnover,
-                Market:       "TWSE"
+                Market:        "TWSE"
             ));
         }
 
         return result;
-    }
-
-    /// <summary>
-    /// 民國年格式 YYYMMDD → DateOnly。
-    /// 例：「1150323」→ DateOnly(2026, 3, 23)
-    /// </summary>
-    internal static bool TryParseRocDate(string rocDate, out DateOnly result)
-    {
-        result = default;
-
-        if (rocDate.Length != 7)
-            return false;
-
-        if (!int.TryParse(rocDate[..3], out var rocYear) ||
-            !int.TryParse(rocDate[3..5], out var month)  ||
-            !int.TryParse(rocDate[5..], out var day))
-            return false;
-
-        var gregorianYear = rocYear + 1911;
-
-        try
-        {
-            result = new DateOnly(gregorianYear, month, day);
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    private static bool TryParseDecimal(string raw, out decimal value)
-    {
-        // 移除千分位逗號後解析
-        var cleaned = raw.Replace(",", "");
-        return decimal.TryParse(cleaned, NumberStyles.Any, CultureInfo.InvariantCulture, out value);
-    }
-
-    private static bool TryParseLong(string raw, out long value)
-    {
-        var cleaned = raw.Replace(",", "");
-        return long.TryParse(cleaned, NumberStyles.Any, CultureInfo.InvariantCulture, out value);
     }
 }

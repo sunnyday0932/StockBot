@@ -4,6 +4,7 @@ using InfluxDB.Client.Writes;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using StockBot.Infrastructure.MarketData;
+using StockBot.Infrastructure.Options;
 
 namespace StockBot.Infrastructure.InfluxDb;
 
@@ -16,8 +17,8 @@ public sealed class InfluxDbWriter : IInfluxDbWriter, IDisposable
     public InfluxDbWriter(IOptions<InfluxDbOptions> options, ILogger<InfluxDbWriter> logger)
     {
         _options = options.Value;
-        _logger = logger;
-        _client = new InfluxDBClient(_options.Url, _options.Token);
+        _logger  = logger;
+        _client  = new InfluxDBClient(_options.Url, _options.Token);
     }
 
     public async Task WriteOhlcvAsync(IEnumerable<StockOhlcvRecord> records, CancellationToken ct = default)
@@ -39,14 +40,14 @@ public sealed class InfluxDbWriter : IInfluxDbWriter, IDisposable
         var timestamp = r.TradingDate.ToDateTime(new TimeOnly(5, 30), DateTimeKind.Utc);
 
         return PointData.Measurement("stock_ohlcv")
-            .Tag("StockCode", r.StockCode)
-            .Tag("Market", r.Market)
-            .Tag("DataSource", "TwseApi")
-            .Field("Open",         (double)r.Open)
-            .Field("High",         (double)r.High)
-            .Field("Low",          (double)r.Low)
-            .Field("Close",        (double)r.Close)
-            .Field("Volume",       r.Volume)
+            .Tag("StockCode",  r.StockCode)
+            .Tag("Market",     r.Market)
+            .Tag("DataSource", r.Market == "TWSE" ? "TwseApi" : "TpexApi")
+            .Field("Open",          (double)r.Open)
+            .Field("High",          (double)r.High)
+            .Field("Low",           (double)r.Low)
+            .Field("Close",         (double)r.Close)
+            .Field("Volume",        r.Volume)
             .Field("TurnoverValue", (double)r.TurnoverValue)
             .Timestamp(timestamp, WritePrecision.S);
     }

@@ -2,8 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Pgvector.EntityFrameworkCore;
 using StockBot.Infrastructure.InfluxDb;
 using StockBot.Infrastructure.MarketData;
+using StockBot.Infrastructure.Options;
 using StockBot.Infrastructure.Persistence;
-using StockBot.Infrastructure.Ptt;
 using StockBot.Workers.Workers;
 
 var builder = Host.CreateApplicationBuilder(args);

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using StockBot.Domain.Enums;
 using StockBot.Infrastructure.Persistence;
+using StockBot.Infrastructure.Options;
 using StockBot.Infrastructure.Ptt;
 
 namespace StockBot.Workers.Workers;

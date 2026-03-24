@@ -1,7 +1,7 @@
-using System.Globalization;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using StockBot.Infrastructure.Options;
 
 namespace StockBot.Infrastructure.MarketData;
 
@@ -44,18 +44,15 @@ public sealed class TpexMarketFetcher(
 
         foreach (var dto in dtos)
         {
-            // 跳過數值欄位為 "---" 的停牌或異常股票
-            if (!TryParseDecimal(dto.Open,              out var open)    ||
-                !TryParseDecimal(dto.High,              out var high)    ||
-                !TryParseDecimal(dto.Low,               out var low)     ||
-                !TryParseDecimal(dto.Close,             out var close)   ||
-                !TryParseLong(dto.TradingShares,        out var volume)  ||
-                !TryParseLong(dto.TransactionAmount,    out var turnover))
-            {
+            if (!MarketDataParser.TryParseDecimal(dto.Open,           out var open)    ||
+                !MarketDataParser.TryParseDecimal(dto.High,           out var high)    ||
+                !MarketDataParser.TryParseDecimal(dto.Low,            out var low)     ||
+                !MarketDataParser.TryParseDecimal(dto.Close,          out var close)   ||
+                !MarketDataParser.TryParseLong(dto.TradingShares,     out var volume)  ||
+                !MarketDataParser.TryParseLong(dto.TransactionAmount, out var turnover))
                 continue;
-            }
 
-            if (!TryParseRocDate(dto.Date, out var tradingDate))
+            if (!MarketDataParser.TryParseRocDate(dto.Date, out var tradingDate))
                 continue;
 
             result.Add(new StockOhlcvRecord(
@@ -73,41 +70,5 @@ public sealed class TpexMarketFetcher(
         }
 
         return result;
-    }
-
-    /// <summary>民國年格式 YYYMMDD → DateOnly。例：「1150323」→ DateOnly(2026, 3, 23)</summary>
-    internal static bool TryParseRocDate(string rocDate, out DateOnly result)
-    {
-        result = default;
-
-        if (rocDate.Length != 7)
-            return false;
-
-        if (!int.TryParse(rocDate[..3], out var rocYear) ||
-            !int.TryParse(rocDate[3..5], out var month)  ||
-            !int.TryParse(rocDate[5..],  out var day))
-            return false;
-
-        try
-        {
-            result = new DateOnly(rocYear + 1911, month, day);
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    private static bool TryParseDecimal(string raw, out decimal value)
-    {
-        var cleaned = raw.Replace(",", "");
-        return decimal.TryParse(cleaned, NumberStyles.Any, CultureInfo.InvariantCulture, out value);
-    }
-
-    private static bool TryParseLong(string raw, out long value)
-    {
-        var cleaned = raw.Replace(",", "");
-        return long.TryParse(cleaned, NumberStyles.Any, CultureInfo.InvariantCulture, out value);
     }
 }

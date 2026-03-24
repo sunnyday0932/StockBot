@@ -1,4 +1,4 @@
-namespace StockBot.Infrastructure.MarketData;
+namespace StockBot.Infrastructure.Options;
 
 public sealed class TpexMarketFetcherOptions
 {

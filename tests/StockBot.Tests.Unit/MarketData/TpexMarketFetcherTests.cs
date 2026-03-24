@@ -109,7 +109,7 @@ public class TpexMarketFetcherTests
     [InlineData("1121231", 2023, 12, 31)]
     public void TryParseRocDate_converts_correctly(string rocDate, int year, int month, int day)
     {
-        var success = TpexMarketFetcher.TryParseRocDate(rocDate, out var result);
+        var success = MarketDataParser.TryParseRocDate(rocDate, out var result);
 
         Assert.True(success);
         Assert.Equal(new DateOnly(year, month, day), result);
@@ -121,7 +121,7 @@ public class TpexMarketFetcherTests
     [InlineData("ABCMMDD")]
     public void TryParseRocDate_returns_false_for_invalid_input(string input)
     {
-        var success = TpexMarketFetcher.TryParseRocDate(input, out _);
+        var success = MarketDataParser.TryParseRocDate(input, out _);
 
         Assert.False(success);
     }
