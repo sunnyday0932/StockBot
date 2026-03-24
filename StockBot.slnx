@@ -4,4 +4,8 @@
     <Project Path="src/StockBot.Infrastructure/StockBot.Infrastructure.csproj" />
     <Project Path="src/StockBot.Workers/StockBot.Workers.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/StockBot.Tests.Integration/StockBot.Tests.Integration.csproj" />
+    <Project Path="tests/StockBot.Tests.Unit/StockBot.Tests.Unit.csproj" />
+  </Folder>
 </Solution>

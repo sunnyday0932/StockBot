@@ -7,7 +7,8 @@
       "Bash(docker --version)",
       "Bash(docker compose:*)",
       "Bash(dotnet:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(docker exec:*)"
     ]
   }
 }
