@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(docker --version)",
+      "Bash(docker compose:*)",
+      "Bash(dotnet:*)",
+      "Bash(ls:*)"
+    ]
+  }
+}
