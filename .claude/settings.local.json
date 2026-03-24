@@ -12,7 +12,9 @@
       "Bash(curl -s \"https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL\")",
       "Bash(curl:*)",
       "Bash(taskkill /PID 28952 /F)",
-      "Bash(taskkill //PID 28952 //F)"
+      "Bash(taskkill //PID 28952 //F)",
+      "WebFetch(domain:www.tpex.org.tw)",
+      "Bash(taskkill //IM \"StockBot.Workers.exe\" //F)"
     ]
   }
 }

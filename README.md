@@ -66,10 +66,13 @@ StockBot/
 │   ├── StockBot.Infrastructure/       # Infrastructure 層：DB、外部 API
 │   │   ├── MarketData/
 │   │   │   ├── IPollingMarketDataFetcher.cs  # REST Pull 型來源的統一介面
-│   │   │   ├── TwseMarketFetcher.cs          # TWSE OpenAPI OHLCV 拉取實作
-│   │   │   ├── TwseMarketFetcherOptions.cs   # TWSE API URL 設定（appsettings 注入）
+│   │   │   ├── StockOhlcvRecord.cs           # 跨來源統一的 OHLCV record
+│   │   │   ├── TwseMarketFetcher.cs          # TWSE OpenAPI OHLCV 拉取（1338 筆上市）
+│   │   │   ├── TwseMarketFetcherOptions.cs   # TWSE API URL（appsettings 注入）
 │   │   │   ├── TwseStockDailyDto.cs          # TWSE JSON 反序列化 DTO
-│   │   │   └── StockOhlcvRecord.cs           # 跨來源統一的 OHLCV record
+│   │   │   ├── TpexMarketFetcher.cs          # TPEX OpenAPI OHLCV 拉取（4966 筆上櫃）
+│   │   │   ├── TpexMarketFetcherOptions.cs   # TPEX API URL（appsettings 注入）
+│   │   │   └── TpexStockDailyDto.cs          # TPEX JSON 反序列化 DTO
 │   │   ├── InfluxDb/
 │   │   │   ├── IInfluxDbWriter.cs     # InfluxDB 寫入介面
 │   │   │   ├── InfluxDbWriter.cs      # 實作：stock_ohlcv Measurement 寫入
@@ -176,6 +179,9 @@ dotnet run --project src/StockBot.Workers
   },
   "TwseApi": {
     "StockDayAllUrl": "https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL"
+  },
+  "TpexApi": {
+    "DailyCloseUrl": "https://www.tpex.org.tw/openapi/v1/tpex_mainboard_daily_close_quotes"
   }
 }
 ```
@@ -196,7 +202,7 @@ dotnet test StockBot.slnx
 
 ### 測試覆蓋範圍
 
-#### 單元測試（30 個，`StockBot.Tests.Unit`）
+#### 單元測試（39 個，`StockBot.Tests.Unit`）
 
 | 測試類別 | 涵蓋的 Use Case |
 |----------|----------------|
@@ -205,6 +211,7 @@ dotnet test StockBot.slnx
 | `AlertSignalTests` | 每次建立 AlertSignal 自動產生不重複 Guid、四種 SignalType 皆可賦值、SentimentAvg 允許為 null |
 | `DiscoveredConceptTests` | 新概念預設為未審核狀態、FirstDiscoveredAt 與 LastSeenAt 可獨立更新 |
 | `TwseMarketFetcherTests` | 解析有效 JSON、跳過停牌股（`--`）、空陣列、千分位數字、TryParseRocDate Theory（民國年轉西元年）|
+| `TpexMarketFetcherTests` | 解析有效 JSON、跳過停牌股（`---`）、空陣列、TryParseRocDate Theory |
 
 #### 整合測試（11 個，`StockBot.Tests.Integration`）
 

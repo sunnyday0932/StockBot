@@ -31,6 +31,15 @@ builder.Services.AddHttpClient<TwseMarketFetcher>(client =>
 builder.Services.AddSingleton<IPollingMarketDataFetcher>(sp =>
     sp.GetRequiredService<TwseMarketFetcher>());
 
+builder.Services.Configure<TpexMarketFetcherOptions>(
+    builder.Configuration.GetSection("TpexApi"));
+builder.Services.AddHttpClient<TpexMarketFetcher>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+builder.Services.AddSingleton<IPollingMarketDataFetcher>(sp =>
+    sp.GetRequiredService<TpexMarketFetcher>());
+
 // Workers
 builder.Services.AddHostedService<MarketDataWorker>();
 

@@ -38,9 +38,12 @@
   - [x] API URL 抽至 `appsettings.json TwseApi:StockDayAllUrl` 管理
   - [x] 單元測試：8 個，含 Parse / TryParseRocDate Theory 測試
 
-- [ ] **TPEX 行情 Fetcher**
-  - [ ] 呼叫 `tpex.org.tw/openapi` 取得上櫃股票日線 OHLCV
-  - [ ] 寫入 InfluxDB `stock_ohlcv` Measurement
+- [x] **TPEX 行情 Fetcher**
+  - [x] 呼叫 `tpex.org.tw/openapi` 取得上櫃股票日線 OHLCV（4966 筆）
+  - [x] 解析 `"---"` 停牌格式（與 TWSE `"--"` 不同）
+  - [x] 寫入 InfluxDB `stock_ohlcv` Measurement（驗證通過）
+  - [x] API URL 抽至 `appsettings.json TpexApi:DailyCloseUrl` 管理
+  - [x] 單元測試：9 個
 
 - [ ] **白名單初始化**
   - [ ] 從 TWSE/TPEX API 拉取全部上市/上櫃股票清單
