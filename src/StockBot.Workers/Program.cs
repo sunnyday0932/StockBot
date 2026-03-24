@@ -1,11 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using Pgvector.EntityFrameworkCore;
 using StockBot.Infrastructure.Ai;
+using StockBot.Infrastructure.Alerting;
 using StockBot.Infrastructure.InfluxDb;
 using StockBot.Infrastructure.MarketData;
 using StockBot.Infrastructure.Options;
 using StockBot.Infrastructure.Persistence;
 using StockBot.Infrastructure.Processing;
+using StockBot.Infrastructure.Telegram;
 using StockBot.Workers.Workers;
 
 var builder = Host.CreateApplicationBuilder(args);
@@ -67,6 +69,15 @@ builder.Services.AddSingleton<ITopDownMatcher, TopDownMatcher>();
 builder.Services.AddSingleton<IEmbeddingService, StubEmbeddingService>();
 builder.Services.AddSingleton<ILlmConceptExtractor, StubLlmConceptExtractor>();
 
+// SignalAnalyzer + Telegram
+builder.Services.Configure<SignalAnalyzerOptions>(
+    builder.Configuration.GetSection("SignalAnalyzer"));
+builder.Services.Configure<TelegramOptions>(
+    builder.Configuration.GetSection("Telegram"));
+builder.Services.AddSingleton<IInfluxDbReader, InfluxDbReader>();
+builder.Services.AddSingleton<ISignalAnalyzer, SignalAnalyzer>();
+builder.Services.AddSingleton<ITelegramNotifier, TelegramNotifier>();
+
 // Workers
 builder.Services.AddHostedService<WhitelistInitializerWorker>();
 builder.Services.AddHostedService<MarketDataWorker>();
@@ -74,6 +85,8 @@ builder.Services.AddHostedService<PttCrawlerWorker>();
 builder.Services.AddHostedService<CnyesNewsCrawlerWorker>();
 builder.Services.AddHostedService<ProcessingWorker>();
 builder.Services.AddHostedService<BottomUpProbeWorker>();
+builder.Services.AddHostedService<SignalAnalyzerWorker>();
+builder.Services.AddHostedService<TelegramBotWorker>();
 
 var host = builder.Build();
 host.Run();

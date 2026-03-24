@@ -139,22 +139,32 @@
 
 ---
 
-## 階段四：訊號分析與推播（Alerting）🔲 未開始
+## 階段四：訊號分析與推播（Alerting）✅ 已完成
 
 ### 任務清單
 
-- [ ] **SignalAnalyzer**
-  - [ ] 定時查詢 InfluxDB，計算過去 15 分鐘聲量變化率
-  - [ ] 與行情資料交叉比對（量價 vs 聲量）
-  - [ ] 實作共振（Resonance）判斷邏輯
-  - [ ] 實作背離出貨（BearishDivergence）判斷邏輯
-  - [ ] 產生 `AlertSignal` 物件
+- [x] **SignalAnalyzer**
+  - [x] `IInfluxDbReader` 介面 + `InfluxDbReader` 實作（Flux 查詢 stock_mentions / stock_ohlcv）
+  - [x] `ISignalAnalyzer` 介面 + `SignalAnalyzer` 實作
+  - [x] 定時查詢 InfluxDB，計算當前窗口 vs 前一窗口聲量變化率
+  - [x] 與行情資料交叉比對（量比 vs 聲量 vs 股價）
+  - [x] 共振（Resonance）：聲量 Δ>50% AND 量比 Δ>50% AND 股價 Δ>2%
+  - [x] 背離出貨（BearishDivergence）：聲量 Δ>50% AND 股價 Δ<-1%
+  - [x] `SignalAnalyzerWorker`：每 15 分鐘執行，觸發時呼叫 `ITelegramNotifier`
+  - [x] `SignalAnalyzerOptions`：所有閾值可由 `appsettings.json` 設定
 
-- [ ] **Telegram Bot**
-  - [ ] 建立 Bot 並設定 Webhook
-  - [ ] 格式化推播 `AlertSignal`（共振 / 背離 / 潛力股）
-  - [ ] 推送 `DiscoveredConcept` 候選名詞供審核
-  - [ ] 支援 `/approve` / `/reject` 指令互動
+- [x] **Telegram Bot**
+  - [x] `ITelegramNotifier` 介面 + `TelegramNotifier` 實作（Telegram.Bot v22.9.5.3）
+  - [x] 格式化推播 `AlertSignal`（含 emoji、聲量/量比/股價數字）
+  - [x] 推送 `DiscoveredConcept` 候選名詞供審核（每 30 分鐘，最多 5 筆）
+  - [x] `TelegramBotWorker`：Long-polling 接收 `/approve ID` / `/reject ID`
+  - [x] `/approve`：升級為 `TrackedEntity`（Concept 類型）+ 新增 `EntityAlias`
+  - [x] `/reject`：從 DB 刪除 `DiscoveredConcept`
+  - [x] `TelegramOptions`：BotToken / ChatId / PollingTimeoutSeconds
+
+  > **TODO（填洞）**：
+  > - `appsettings.json` 中 `Telegram:BotToken` 填入真實 Bot Token（由 @BotFather 取得）
+  > - `Telegram:ChatId` 填入推播目標頻道 / 群組 ID
 
 ---
 
