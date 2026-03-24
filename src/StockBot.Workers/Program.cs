@@ -20,11 +20,14 @@ builder.Services.Configure<InfluxDbOptions>(
     builder.Configuration.GetSection("InfluxDb"));
 builder.Services.AddSingleton<IInfluxDbWriter, InfluxDbWriter>();
 
-// TWSE Market Data Fetcher（具名 HttpClient，設定 timeout）
+// Market Data Fetchers（Polling 模式，REST API 類型）
+// 新增來源只需實作 IPollingMarketDataFetcher 並在此加入新的 AddHttpClient 即可
 builder.Services.AddHttpClient<TwseMarketFetcher>(client =>
 {
     client.Timeout = TimeSpan.FromSeconds(30);
 });
+builder.Services.AddSingleton<IPollingMarketDataFetcher>(sp =>
+    sp.GetRequiredService<TwseMarketFetcher>());
 
 // Workers
 builder.Services.AddHostedService<MarketDataWorker>();

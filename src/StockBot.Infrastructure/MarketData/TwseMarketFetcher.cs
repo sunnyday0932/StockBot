@@ -9,9 +9,12 @@ namespace StockBot.Infrastructure.MarketData;
 /// API：GET https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL
 /// </summary>
 public sealed class TwseMarketFetcher(HttpClient httpClient, ILogger<TwseMarketFetcher> logger)
+    : IPollingMarketDataFetcher
 {
     private const string StockDayAllUrl =
         "https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL";
+
+    public string SourceName => "TWSE";
 
     public async Task<IReadOnlyList<StockOhlcvRecord>> FetchAsync(CancellationToken ct = default)
     {
