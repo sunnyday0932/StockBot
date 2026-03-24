@@ -14,7 +14,10 @@
       "Bash(taskkill /PID 28952 /F)",
       "Bash(taskkill //PID 28952 //F)",
       "WebFetch(domain:www.tpex.org.tw)",
-      "Bash(taskkill //IM \"StockBot.Workers.exe\" //F)"
+      "Bash(taskkill //IM \"StockBot.Workers.exe\" //F)",
+      "WebFetch(domain:www.ptt.cc)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:jasonblog.github.io)"
     ]
   }
 }

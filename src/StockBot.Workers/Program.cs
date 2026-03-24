@@ -3,6 +3,7 @@ using Pgvector.EntityFrameworkCore;
 using StockBot.Infrastructure.InfluxDb;
 using StockBot.Infrastructure.MarketData;
 using StockBot.Infrastructure.Persistence;
+using StockBot.Infrastructure.Ptt;
 using StockBot.Workers.Workers;
 
 var builder = Host.CreateApplicationBuilder(args);
@@ -40,8 +41,18 @@ builder.Services.AddHttpClient<TpexMarketFetcher>(client =>
 builder.Services.AddSingleton<IPollingMarketDataFetcher>(sp =>
     sp.GetRequiredService<TpexMarketFetcher>());
 
+// PTT Crawler
+builder.Services.Configure<PttCrawlerOptions>(
+    builder.Configuration.GetSection("PttCrawler"));
+builder.Services.AddHttpClient<PttCrawlerWorker>(client =>
+{
+    client.DefaultRequestHeaders.Add("Cookie", "over18=1");
+    client.Timeout = TimeSpan.FromSeconds(15);
+});
+
 // Workers
 builder.Services.AddHostedService<MarketDataWorker>();
+builder.Services.AddHostedService<PttCrawlerWorker>();
 
 var host = builder.Build();
 host.Run();

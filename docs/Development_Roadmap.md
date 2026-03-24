@@ -49,10 +49,13 @@
   - [ ] 從 TWSE/TPEX API 拉取全部上市/上櫃股票清單
   - [ ] 批次寫入 `TrackedEntity`（Stock 類型）
 
-- [ ] **PTT 爬蟲 Worker**
-  - [ ] WebSocket 監聽 PTT 股板即時文章
-  - [ ] 解析推/噓/箭頭數
-  - [ ] 正規化為 `SourceDocument`
+- [x] **PTT 爬蟲 Worker**
+  - [x] HTTP Polling 每 60 秒拉取 PTT 股板最新文章（V1；WebSocket 版列入 V2）
+  - [x] `PttWebParser`：解析 index 頁文章列表（跳過已刪除文章）
+  - [x] `PttWebParser`：解析文章全文、推/噓/→ 數量、ctime 日期（UTC+8 → UTC 轉換）
+  - [x] 記憶體 HashSet 去重 + 啟動時從 DB 載入近 7 天已知 ID
+  - [x] 寫入 PostgreSQL `SourceDocuments`（驗證通過，6 篇含推噓數）
+  - [x] 單元測試：12 個（ParseIndex / ParseArticle / TryParseArticleDate Theory）
 
 - [ ] **財經新聞爬蟲 Worker**
   - [ ] 定時爬取鉅亨網 RSS（每分鐘）
