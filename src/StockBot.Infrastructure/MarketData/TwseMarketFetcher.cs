@@ -1,18 +1,21 @@
 using System.Globalization;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace StockBot.Infrastructure.MarketData;
 
 /// <summary>
 /// 呼叫 TWSE OpenAPI 取得全上市股票當日 OHLCV 日線資料。
-/// API：GET https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL
+/// API URL 由 appsettings.json 的 TwseApi:StockDayAllUrl 設定。
 /// </summary>
-public sealed class TwseMarketFetcher(HttpClient httpClient, ILogger<TwseMarketFetcher> logger)
+public sealed class TwseMarketFetcher(
+    HttpClient httpClient,
+    IOptions<TwseMarketFetcherOptions> options,
+    ILogger<TwseMarketFetcher> logger)
     : IPollingMarketDataFetcher
 {
-    private const string StockDayAllUrl =
-        "https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL";
+    private readonly string _stockDayAllUrl = options.Value.StockDayAllUrl;
 
     public string SourceName => "TWSE";
 
@@ -20,7 +23,7 @@ public sealed class TwseMarketFetcher(HttpClient httpClient, ILogger<TwseMarketF
     {
         logger.LogInformation("Fetching TWSE daily OHLCV data...");
 
-        var json = await httpClient.GetStringAsync(StockDayAllUrl, ct);
+        var json = await httpClient.GetStringAsync(_stockDayAllUrl, ct);
         var records = Parse(json);
 
         logger.LogInformation("Fetched {Count} TWSE records.", records.Count);

@@ -64,21 +64,35 @@ StockBot/
 │   │       └── SignalType.cs          # Resonance / BearishDivergence / ...
 │   │
 │   ├── StockBot.Infrastructure/       # Infrastructure 層：DB、外部 API
+│   │   ├── MarketData/
+│   │   │   ├── IPollingMarketDataFetcher.cs  # REST Pull 型來源的統一介面
+│   │   │   ├── TwseMarketFetcher.cs          # TWSE OpenAPI OHLCV 拉取實作
+│   │   │   ├── TwseMarketFetcherOptions.cs   # TWSE API URL 設定（appsettings 注入）
+│   │   │   ├── TwseStockDailyDto.cs          # TWSE JSON 反序列化 DTO
+│   │   │   └── StockOhlcvRecord.cs           # 跨來源統一的 OHLCV record
+│   │   ├── InfluxDb/
+│   │   │   ├── IInfluxDbWriter.cs     # InfluxDB 寫入介面
+│   │   │   ├── InfluxDbWriter.cs      # 實作：stock_ohlcv Measurement 寫入
+│   │   │   └── InfluxDbOptions.cs     # InfluxDB 連線設定
 │   │   └── Persistence/
 │   │       ├── StockBotDbContext.cs   # EF Core DbContext + pgvector 設定
 │   │       └── Migrations/            # EF Core 自動產生的 PostgreSQL Migrations
 │   │
 │   └── StockBot.Workers/              # 主程式：Worker Service 進入點
+│       ├── Workers/
+│       │   └── MarketDataWorker.cs    # 定時拉取行情並寫入 InfluxDB
 │       ├── Program.cs                 # DI 註冊、Host 設定
-│       └── appsettings.json           # 連線字串、InfluxDB 設定
+│       └── appsettings.json           # 連線字串、InfluxDB / TWSE API 設定
 │
 ├── tests/
-│   ├── StockBot.Tests.Unit/           # 單元測試：純 Domain 邏輯，不需 DB
-│   │   └── Entities/
-│   │       ├── TrackedEntityTests.cs
-│   │       ├── SourceDocumentTests.cs
-│   │       ├── AlertSignalTests.cs
-│   │       └── DiscoveredConceptTests.cs
+│   ├── StockBot.Tests.Unit/           # 單元測試：純邏輯，不需 DB / HTTP
+│   │   ├── Entities/
+│   │   │   ├── TrackedEntityTests.cs
+│   │   │   ├── SourceDocumentTests.cs
+│   │   │   ├── AlertSignalTests.cs
+│   │   │   └── DiscoveredConceptTests.cs
+│   │   └── MarketData/
+│   │       └── TwseMarketFetcherTests.cs  # Parse / TryParseRocDate 單元測試
 │   │
 │   └── StockBot.Tests.Integration/    # 整合測試：連接真實 Docker PostgreSQL
 │       ├── Fixtures/
@@ -156,6 +170,12 @@ dotnet run --project src/StockBot.Workers
     "Token": "stockbot-super-secret-token",
     "Org": "stockbot-org",
     "Bucket": "stockbot"
+  },
+  "MarketData": {
+    "FetchIntervalMinutes": 5
+  },
+  "TwseApi": {
+    "StockDayAllUrl": "https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL"
   }
 }
 ```
@@ -176,7 +196,7 @@ dotnet test StockBot.slnx
 
 ### 測試覆蓋範圍
 
-#### 單元測試（20 個，`StockBot.Tests.Unit`）
+#### 單元測試（30 個，`StockBot.Tests.Unit`）
 
 | 測試類別 | 涵蓋的 Use Case |
 |----------|----------------|
@@ -184,6 +204,7 @@ dotnet test StockBot.slnx
 | `SourceDocumentTests` | PTT 文章可帶推/噓/箭頭數、非 PTT 文章這些欄位為 null、六種 SourceType 皆合法 |
 | `AlertSignalTests` | 每次建立 AlertSignal 自動產生不重複 Guid、四種 SignalType 皆可賦值、SentimentAvg 允許為 null |
 | `DiscoveredConceptTests` | 新概念預設為未審核狀態、FirstDiscoveredAt 與 LastSeenAt 可獨立更新 |
+| `TwseMarketFetcherTests` | 解析有效 JSON、跳過停牌股（`--`）、空陣列、千分位數字、TryParseRocDate Theory（民國年轉西元年）|
 
 #### 整合測試（11 個，`StockBot.Tests.Integration`）
 

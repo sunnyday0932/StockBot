@@ -22,6 +22,8 @@ builder.Services.AddSingleton<IInfluxDbWriter, InfluxDbWriter>();
 
 // Market Data Fetchers（Polling 模式，REST API 類型）
 // 新增來源只需實作 IPollingMarketDataFetcher 並在此加入新的 AddHttpClient 即可
+builder.Services.Configure<TwseMarketFetcherOptions>(
+    builder.Configuration.GetSection("TwseApi"));
 builder.Services.AddHttpClient<TwseMarketFetcher>(client =>
 {
     client.Timeout = TimeSpan.FromSeconds(30);

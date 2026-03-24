@@ -30,10 +30,13 @@
 
 ### 任務清單
 
-- [ ] **TWSE 行情 Fetcher**（優先，免費 REST API）
-  - [ ] 呼叫 `openapi.twse.com.tw` 取得上市股票日線 OHLCV
-  - [ ] 寫入 InfluxDB `stock_ohlcv` Measurement
-  - [ ] 建立對應整合測試
+- [x] **TWSE 行情 Fetcher**（免費 REST API）
+  - [x] 實作 `IPollingMarketDataFetcher` 介面隔離（Pull vs Push 分離設計）
+  - [x] 呼叫 `openapi.twse.com.tw` 取得上市股票日線 OHLCV（1338 筆）
+  - [x] 解析民國年日期格式（`TryParseRocDate`）、千分位數字、停牌股跳過
+  - [x] 寫入 InfluxDB `stock_ohlcv` Measurement（驗證通過）
+  - [x] API URL 抽至 `appsettings.json TwseApi:StockDayAllUrl` 管理
+  - [x] 單元測試：8 個，含 Parse / TryParseRocDate Theory 測試
 
 - [ ] **TPEX 行情 Fetcher**
   - [ ] 呼叫 `tpex.org.tw/openapi` 取得上櫃股票日線 OHLCV
