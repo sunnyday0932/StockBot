@@ -45,9 +45,11 @@
   - [x] API URL 抽至 `appsettings.json TpexApi:DailyCloseUrl` 管理
   - [x] 單元測試：9 個
 
-- [ ] **白名單初始化**
-  - [ ] 從 TWSE/TPEX API 拉取全部上市/上櫃股票清單
-  - [ ] 批次寫入 `TrackedEntity`（Stock 類型）
+- [x] **白名單初始化**
+  - [x] `WhitelistInitializerWorker`：啟動時從 TWSE + TPEX 拉取完整股票清單
+  - [x] 寫入 `TrackedEntity`（Stock 類型）+ 自動建立兩個 `EntityAlias`（代號 + 名稱）
+  - [x] Idempotent upsert（重複啟動安全）
+  - [x] 驗證：6304 筆股票、12608 個關鍵字寫入成功
 
 - [x] **PTT 爬蟲 Worker**
   - [x] HTTP Polling 每 60 秒拉取 PTT 股板最新文章（V1；WebSocket 版列入 V2）

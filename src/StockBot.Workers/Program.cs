@@ -51,6 +51,7 @@ builder.Services.AddHttpClient<PttCrawlerWorker>(client =>
 });
 
 // Workers
+builder.Services.AddHostedService<WhitelistInitializerWorker>();
 builder.Services.AddHostedService<MarketDataWorker>();
 builder.Services.AddHostedService<PttCrawlerWorker>();
 
