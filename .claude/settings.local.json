@@ -9,18 +9,14 @@
       "Bash(dotnet:*)",
       "Bash(ls:*)",
       "Bash(docker exec:*)",
-      "Bash(curl -s \"https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL\")",
       "Bash(curl:*)",
-      "Bash(taskkill /PID 28952 /F)",
-      "Bash(taskkill //PID 28952 //F)",
+      "Bash(docker ps:*)",
+      "Bash(taskkill:*)",
+      "Bash(find:*)",
       "WebFetch(domain:www.tpex.org.tw)",
-      "Bash(taskkill //IM \"StockBot.Workers.exe\" //F)",
       "WebFetch(domain:www.ptt.cc)",
       "WebFetch(domain:github.com)",
-      "WebFetch(domain:jasonblog.github.io)",
-      "Bash(find /c/Users/sunny/RiderProjects/StockBot/src/StockBot.Domain -name *.cs)",
-      "Bash(docker ps:*)",
-      "Bash(taskkill //F //IM StockBot.BackOffice.exe)"
+      "WebFetch(domain:jasonblog.github.io)"
     ]
   }
 }
